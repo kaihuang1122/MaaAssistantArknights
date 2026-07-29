@@ -28,6 +28,7 @@ using MaaWpfGui.Models.AsstTasks;
 using MaaWpfGui.States;
 using MaaWpfGui.Utilities;
 using MaaWpfGui.Utilities.ValueType;
+using MaaWpfGui.ViewModels.UI;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using Serilog;
@@ -244,7 +245,16 @@ public class InfrastSettingsUserControlModel : TaskSettingsViewModel, InfrastSet
             SetTaskConfig<InfrastTask>(t => t.CustomFileType == value, t => t.CustomFileType = value);
             if (value != UserDefined)
             {
-                CustomInfrastFile = Path.Combine(PathsHelper.ResourceDir, "custom_infrast", value);
+                var clientType = SettingsViewModel.GameSettings.ClientType;
+                bool isDefaultClient = clientType is ClientType.Official or ClientType.Bilibili;
+
+                string globalPath = isDefaultClient
+                    ? string.Empty
+                    : Path.Combine(PathsHelper.ResourceDir, "global", clientType.ToCustomString(), "resource", "custom_infrast", value);
+
+                CustomInfrastFile = !isDefaultClient && File.Exists(globalPath)
+                    ? globalPath
+                    : Path.Combine(PathsHelper.ResourceDir, "custom_infrast", value);
             }
 
             ConfigurationHelper.SetValue(ConfigurationKeys.DefaultInfrast, value);
